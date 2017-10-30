@@ -6,55 +6,80 @@
 using namespace sf;
 using namespace std;
 
-constexpr int pointCount = 200;
-const Vector2f ellipse2Radius = {70.f, 130.f};
-const Vector2f ellipse1Radius = {20.f, 30.f};
-
+// Создаем структуру эллипсов
 struct Ellipse
 {
-    ConvexShape ellipse2;
-    ConvexShape ellipse1;
+    ConvexShape white;
+    ConvexShape black;
     Vector2f position;
     float rotation = 0;
 };
 
-void initEllipse(Ellipse &ellipse)
+// Переводит  полярные координаты в декартовы
+Vector2f toEuclidean(float x, float y, float angle)
 {
-    // Объявляем фигуру, которая будет выглядеть как эллипс2
-    ellipse.ellipse2.setPosition({300, 320});
-    ellipse.ellipse2.setFillColor(Color(0xFF, 0xFF, 0xFF));
-
-    // Инициализируем вершины псевдо-эллипса 2
-    ellipse.ellipse2.setPointCount(pointCount);
-    for (int pointNo = 0; pointNo < pointCount; ++pointNo)
-    {
-        float angle = float(2 * M_PI * pointNo) / float(pointCount);
-        Vector2f point = {
-            ellipse2Radius.x * std::sin(angle),
-            ellipse2Radius.y * std::cos(angle)};
-        ellipse.ellipse2.setPoint(pointNo, point);
-    }
-
-    // Объявляем фигуру, которая будет выглядеть как эллипс1
-    ellipse.ellipse1.setPosition({300, 320});
-    ellipse.ellipse1.setFillColor(Color(0xFF, 0x00, 0x00));
-
-    // Инициализируем вершины псевдо-эллипса1
-    ellipse.ellipse1.setPointCount(pointCount);
-    for (int pointNo = 0; pointNo < pointCount; ++pointNo)
-    {
-        float angle = float(2 * M_PI * pointNo) / float(pointCount);
-        Vector2f point = {
-            ellipse1Radius.x * std::sin(angle),
-            ellipse1Radius.y * std::cos(angle)};
-        ellipse.ellipse1.setPoint(pointNo, point);
-    }
+    return {x * cos(angle), y * sin(angle)};
 }
 
-// Переводит радианы в градусы
-float toDegrees(float radians)
+// Обновляет позиции и повороты частей эллипсов согласно текущему состоянию эллипса
+void updateEllipseElements(Ellipse &leftEllipse, Ellipse &rightEllipse)
 {
-    return float(double(radians) * 180.0 / M_PI);
+    const Vector2f rotationRadius = {30.f, 50.f};
+
+    const Vector2f whiteLeftEllipseOffset = toEuclidean(rotationRadius.x, rotationRadius.y, leftEllipse.rotation);
+    leftEllipse.black.setPosition(leftEllipse.position + whiteLeftEllipseOffset);
+
+    const Vector2f whiteRightEllipseOffset = toEuclidean(rotationRadius.x, rotationRadius.y, rightEllipse.rotation);
+    rightEllipse.black.setPosition(rightEllipse.position + whiteRightEllipseOffset);
+}
+
+// Инициализируем фигуру
+void initEllipse(Ellipse &leftEllipse, Ellipse &rightEllipse)
+{
+    constexpr int pointCount = 200;
+    Vector2f whiteRadius = {50.f, 100.f};
+    Vector2f blackRadius = {15.f, 20.f};
+
+    leftEllipse.position = {300, 300};
+    rightEllipse.position = {500, 300};
+
+    // Объявляем фигуры, которые будут выглядеть как левый и правый белый эллипс
+    leftEllipse.white.setFillColor(sf::Color(255, 255, 255));
+    leftEllipse.white.setPointCount(pointCount);
+    leftEllipse.white.setPosition(leftEllipse.position);
+    rightEllipse.white.setFillColor(sf::Color(255, 255, 255));
+    rightEllipse.white.setPointCount(pointCount);
+    rightEllipse.white.setPosition(rightEllipse.position);
+
+    // Инициализируем вершины белых эллипсов
+    for (int pointNo = 0; pointNo < pointCount; ++pointNo)
+    {
+        float angle = float(2 * M_PI * pointNo) / float(pointCount);
+        Vector2f point = {
+            whiteRadius.x * sin(angle),
+            whiteRadius.y * cos(angle)};
+        leftEllipse.white.setPoint(pointNo, point);
+        rightEllipse.white.setPoint(pointNo, point);
+    }
+
+    // Объявляем фигуры, которые будут выглядеть как левый и правый черный эллипс
+    leftEllipse.black.setPointCount(pointCount);
+    leftEllipse.black.setFillColor(sf::Color(0, 0, 0));
+    rightEllipse.black.setPointCount(pointCount);
+    rightEllipse.black.setFillColor(sf::Color(0, 0, 0));
+
+    // Инициализируем вершины черных эллипсов
+    for (int pointNo = 0; pointNo < pointCount; ++pointNo)
+    {
+        float angle = float(2 * M_PI * pointNo) / float(pointCount);
+        Vector2f point = {
+            blackRadius.x * sin(angle),
+            blackRadius.y * cos(angle)};
+        leftEllipse.black.setPoint(pointNo, point);
+        rightEllipse.black.setPoint(pointNo, point);
+    }
+
+    updateEllipseElements(leftEllipse, rightEllipse);
 }
 
 // Обрабатывает событие MouseMove, обновляя позицию мыши
@@ -62,14 +87,6 @@ void onMouseMove(const Event::MouseMoveEvent &event, Vector2f &mousePosition)
 {
     cout << "mouse x=" << event.x << ", y=" << event.y << endl;
     mousePosition = {float(event.x), float(event.y)};
-}
-
-// Обновляет позиции и повороты частей эллипса согласно текущему состоянию стрелки
-void updateEllipseElements(Ellipse &ellipse)
-{
-    const Vector2f ellipse1Offset = (300, ellipse.rotation);
-    ellipse.ellipse1.setPosition(ellipse.position + ellipse1Offset);
-    ellipse.ellipse1.setRotation(toDegrees(ellipse.rotation));
 }
 
 // Опрашивает и обрабатывает доступные события в цикле
@@ -93,19 +110,25 @@ void pollEvents(RenderWindow &window, Vector2f &mousePosition)
 }
 
 // Обновляет фигуру, указывающую на мышь
-void update(const sf::Vector2f &mousePosition, Ellipse &ellipse)
+void update(const Vector2f &mousePosition, Ellipse &leftEllipse, Ellipse &rightEllipse)
 {
-    const sf::Vector2f delta = mousePosition - ellipse1.position;
-    ellipse1.rotation = atan2(delta.y, delta.x);
-    updateEllipseElements(ellipse);
+    const Vector2f leftEllipseDelta = mousePosition - leftEllipse.position;
+    leftEllipse.rotation = atan2(leftEllipseDelta.y, leftEllipseDelta.x);
+
+    const Vector2f rightEllipseDelta = mousePosition - rightEllipse.position;
+    rightEllipse.rotation = atan2(rightEllipseDelta.y, rightEllipseDelta.x);
+
+    updateEllipseElements(leftEllipse, rightEllipse);
 }
 
 // Рисует и выводит один кадр
-void redrawFrame(sf::RenderWindow &window, Ellipse &ellipse)
+void redrawFrame(sf::RenderWindow &window, Ellipse &leftEllipse, Ellipse &rightEllipse)
 {
     window.clear();
-    window.draw(ellipse.ellipse2);
-    window.draw(ellipse.ellipse1);
+    window.draw(leftEllipse.white);
+    window.draw(leftEllipse.black);
+    window.draw(rightEllipse.white);
+    window.draw(rightEllipse.black);
     window.display();
 }
 
@@ -114,21 +137,25 @@ int main()
     constexpr unsigned WINDOW_WIDTH = 800;
     constexpr unsigned WINDOW_HEIGHT = 600;
 
+    const Vector2f whiteRadius = {10.f, 30.f};
+    const Vector2f blackRadius = {4.f, 10.f};
+
     // Создаём окно с параметрами сглаживания
     ContextSettings settings;
     settings.antialiasingLevel = 8;
     RenderWindow window(
-        VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Ellipse and ellipse1",
+        VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Eyes",
         Style::Default, settings);
 
-    Ellipse ellipse;
+    Ellipse leftEllipse;
+    Ellipse rightEllipse;
     Vector2f mousePosition;
 
-    initEllipse(ellipse);
+    initEllipse(leftEllipse, rightEllipse);
     while (window.isOpen())
     {
         pollEvents(window, mousePosition);
-        update(mousePosition, ellipse);
-        redrawFrame(window, ellipse);
+        update(mousePosition, leftEllipse, rightEllipse);
+        redrawFrame(window, leftEllipse, rightEllipse);
     }
 }
