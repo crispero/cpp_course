@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-project(sfml-lab-3) 
+project(sfml-lab-3)
 
 set(SFML_STATIC_LIBRARIES TRUE)
 
@@ -13,8 +13,5 @@ add_subdirectory(01)
 add_subdirectory(02)
 add_subdirectory(03)
 add_subdirectory(04)
-add_subdirectory(hm)
 add_subdirectory(sfml3.1)
 add_subdirectory(sfml3.2)
-add_subdirectory(sfml3.3)
-
