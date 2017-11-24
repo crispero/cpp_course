@@ -55,7 +55,7 @@ void pollEvents(RenderWindow &window, Vector2f &mousePosition)
 void update(const Vector2f &mousePosition, ConvexShape &pointer, float time)
 {
     const Vector2f delta = mousePosition - pointer.getPosition();
-    const float maxAngulerSpeed = 80;
+    const float maxAngulerSpeed = 15;
     float requiredRotation = atan2(delta.y, delta.x);
     if (requiredRotation < 0)
     {
