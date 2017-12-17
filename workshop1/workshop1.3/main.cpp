@@ -1,6 +1,4 @@
 #include <SFML\Graphics.hpp>
-#include <SFML\Window.hpp>
-#include <SFML\System.hpp>
 
 using namespace std;
 using namespace sf;
@@ -13,7 +11,7 @@ int main()
     RenderWindow window(VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Cat");
 
     Texture texture;
-    texture.loadFromFile("workshop1.3/cat.png");
+    texture.loadFromFile("./cat.png");
 
     Sprite sprite;
     sprite.setTexture(texture);
